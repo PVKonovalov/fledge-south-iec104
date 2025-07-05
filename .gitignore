@@ -41,3 +41,6 @@ cmake-build-debug/*
 
 # Github
 .github*
+
+# MacOS
+.DS_Store
