@@ -73,7 +73,7 @@ public:
     std::vector<std::string>& GetRemoteCertificates() {return m_remoteCertificates;};
     std::vector<std::string>& GetCaCertificates() {return m_caCertificates;};
 
-    static bool isValidHostName(const string& addrStr);
+    static bool isValidHostName(const std::string& addrStr);
 
     std::vector<std::shared_ptr<IEC104ClientRedGroup>>& RedundancyGroups() {return m_redundancyGroups;};
 
