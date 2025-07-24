@@ -391,13 +391,29 @@ IEC104ClientConfig::checkExchangeDataLayer(int typeId, int ca, int ioa)
 }
 
 bool
-IEC104ClientConfig::isValidIPAddress(const string& addrStr)
+IEC104ClientConfig::isValidHostName(const string& addrStr)
 {
-    // see https://stackoverflow.com/questions/318236/how-do-you-validate-that-a-string-is-a-valid-ipv4-address-in-c
     struct sockaddr_in sa;
     int result = inet_pton(AF_INET, addrStr.c_str(), &(sa.sin_addr));
+    if (result == 1) {
+        return true;
+    }
 
-    return (result == 1);
+    // Check if it's a valid IPv6 address
+    struct sockaddr_in6 sa6;
+    result = inet_pton(AF_INET6, addrStr.c_str(), &(sa6.sin6_addr));
+    if (result == 1) {
+        return true;
+    }
+
+    // If basic syntax validation passes, try to resolve the domain name
+    struct hostent* host_entry = gethostbyname(addrStr.c_str());
+    if (host_entry != nullptr) {
+        // Successfully resolved the domain name
+        return true;
+    }
+
+    return false; // Invalid hostname or IP address
 }
 
 void IEC104ClientConfig::importProtocolConfig(const string& protocolConfig)
@@ -852,7 +868,7 @@ void IEC104ClientConfig::importRedGroupCon(const Value& con, std::shared_ptr<IEC
     }
     string srvIp = con["srv_ip"].GetString();
 
-    if (!isValidIPAddress(srvIp)) {
+    if (!isValidHostName(srvIp)) {
         Iec104Utility::log_error("%s  srv_ip %s is not a valid IP address -> ignore", beforeLog.c_str(), srvIp.c_str());
         return;
     }
@@ -869,7 +885,7 @@ void IEC104ClientConfig::importRedGroupCon(const Value& con, std::shared_ptr<IEC
         if (con["clt_ip"].IsString()) {
             string cltIpStr = con["clt_ip"].GetString();
 
-            if (isValidIPAddress(cltIpStr)) {
+            if (isValidHostName(cltIpStr)) {
                 clientIp = cltIpStr;
             }
             else {
