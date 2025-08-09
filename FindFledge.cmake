@@ -9,8 +9,8 @@
 #
 
 # Set defaults paths of installed Fledge SDK package
-set(FLEDGE_DEFAULT_INCLUDE_DIR "/usr/include/fledge" CACHE INTERNAL "")
-set(FLEDGE_DEFAULT_LIB_DIR "/usr/lib/fledge" CACHE INTERNAL "")
+set(FLEDGE_DEFAULT_INCLUDE_DIR "vendor/fledge" CACHE INTERNAL "")
+set(FLEDGE_DEFAULT_LIB_DIR "vendor/fledge" CACHE INTERNAL "")
 
 # CMakeLists.txt options
 set(FLEDGE_SRC "" CACHE INTERNAL "")

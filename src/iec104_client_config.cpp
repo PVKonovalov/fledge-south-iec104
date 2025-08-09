@@ -391,7 +391,7 @@ IEC104ClientConfig::checkExchangeDataLayer(int typeId, int ca, int ioa)
 }
 
 bool
-IEC104ClientConfig::isValidHostName(const string& addrStr)
+IEC104ClientConfig::isValidHostName(const std::string& addrStr)
 {
     struct sockaddr_in sa;
     int result = inet_pton(AF_INET, addrStr.c_str(), &(sa.sin_addr));

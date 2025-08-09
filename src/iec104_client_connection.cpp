@@ -4,8 +4,8 @@
 #include <utils.h>
 #include <reading.h>
 
-#include <lib60870/hal_time.h>
-#include <lib60870/hal_thread.h>
+#include <hal_time.h>
+#include <hal_thread.h>
 
 #include "iec104_client.h"
 #include "iec104_client_config.h"

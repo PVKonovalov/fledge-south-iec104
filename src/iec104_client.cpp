@@ -12,8 +12,8 @@
 #include <algorithm>
 #include <map>
 
-#include <lib60870/hal_time.h>
-#include <lib60870/hal_thread.h>
+#include <hal_time.h>
+#include <hal_thread.h>
 
 #include "iec104.h"
 #include "iec104_client.h"
