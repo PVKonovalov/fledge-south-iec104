@@ -12,7 +12,7 @@
 #include <reading.h>
 
 #include <string>
-#include <hal_time.h>
+#include <lib60870/hal_time.h>
 
 #include "iec104.h"
 #include "iec104_client.h"

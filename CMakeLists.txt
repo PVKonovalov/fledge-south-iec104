@@ -14,6 +14,10 @@ project(iec104)
 
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 message(STATUS ${CMAKE_CXX_FLAGS})
 
 if (${CMAKE_BUILD_TYPE} STREQUAL Coverage)
@@ -24,27 +28,26 @@ if (${CMAKE_BUILD_TYPE} STREQUAL Coverage)
     append_coverage_compiler_flags()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 --coverage")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O0 --coverage")
-    set(GCOVR_ADDITIONAL_ARGS "--exclude-unreachable-branches" "--exclude-throw-branches")
+  set(GCOVR_ADDITIONAL_ARGS "--exclude-unreachable-branches" "--exclude-throw-branches" )
 
-
+  
     setup_target_for_coverage_gcovr_sonar(NAME "${PROJECT_NAME}_coverage_sonar"
             EXECUTABLE RunTests
             DEPENDENCIES RunTests
             BASE_DIRECTORY "${PROJECT_SOURCE_DIR}"
             EXCLUDE "tests/*"
-    )
-
+  )    
+  
     setup_target_for_coverage_gcovr_html(NAME "${PROJECT_NAME}_coverage_html"
             EXECUTABLE RunTests
             DEPENDENCIES RunTests
             BASE_DIRECTORY "${PROJECT_SOURCE_DIR}"
             EXCLUDE "tests/*"
     )
-else ()
-    message("Build without Coverage")
-
-    set(CMAKE_CXX_FLAGS "-std=c++11 -O3")
-endif ()
+else()
+  message("Build without Coverage") 
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
+endif()
 
 # Generation version header file
 set_source_files_properties(version.h PROPERTIES GENERATED TRUE)
@@ -68,30 +71,23 @@ file(GLOB SOURCES src/*.cpp)
 
 # Find Fledge includes and libs, by including FindFledge.cmak file
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR})
-set(FLEDGE_INCLUDE_DIRS vendor/fledge/include)
-set(FLEDGE_LIB_DIRS vendor/fledge/lib)
-
-# find_package(Fledge)
+find_package(Fledge)
 # If errors: make clean and remove Makefile
-#if (NOT FLEDGE_FOUND)
-#    if (EXISTS "${CMAKE_BINARY_DIR}/Makefile")
-#        execute_process(COMMAND make clean WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
-#        file(REMOVE "${CMAKE_BINARY_DIR}/Makefile")
-#    endif ()
-#    # Stop the build process
-#    message(FATAL_ERROR "Fledge plugin '${PROJECT_NAME}' build error.")
-#endif ()
+if (NOT FLEDGE_FOUND)
+	if (EXISTS "${CMAKE_BINARY_DIR}/Makefile")
+		execute_process(COMMAND make clean WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+		file(REMOVE "${CMAKE_BINARY_DIR}/Makefile")
+	endif()
+	# Stop the build process
+	message(FATAL_ERROR "Fledge plugin '${PROJECT_NAME}' build error.")
+endif()
 # On success, FLEDGE_INCLUDE_DIRS and FLEDGE_LIB_DIRS variables are set 
 
 
 # Add ./include
 include_directories(include)
-include_directories(vendor/lib60870-C/src/inc/api)
-include_directories(vendor/lib60870-C/src/hal/inc)
 # Add Fledge include dir(s)
 include_directories(${FLEDGE_INCLUDE_DIRS})
-
-add_subdirectory(vendor/lib60870-C)
 
 # Add Fledge lib path
 link_directories(${FLEDGE_LIB_DIRS})
@@ -100,7 +96,7 @@ link_directories(${FLEDGE_LIB_DIRS})
 if (FLEDGE_SRC)
     message(STATUS "Using third-party includes " ${FLEDGE_SRC}/C/thirdparty)
     include_directories(${FLEDGE_SRC}/C/thirdparty/rapidjson/include)
-endif ()
+endif()
 
 
 # Create shared library
@@ -122,4 +118,4 @@ set(FLEDGE_INSTALL "" CACHE INTERNAL "")
 if (FLEDGE_INSTALL)
     message(STATUS "Installing ${PROJECT_NAME} in ${FLEDGE_INSTALL}/plugins/${PLUGIN_TYPE}/${PROJECT_NAME}")
     install(TARGETS ${PROJECT_NAME} DESTINATION ${FLEDGE_INSTALL}/plugins/${PLUGIN_TYPE}/${PROJECT_NAME})
-endif ()
+endif()
