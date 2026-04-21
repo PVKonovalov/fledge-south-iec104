@@ -14,46 +14,49 @@ project(iec104)
 
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 message(STATUS ${CMAKE_CXX_FLAGS})
 
 if (${CMAKE_BUILD_TYPE} STREQUAL Coverage)
-  message("Coverage is going to be generated")
-  enable_testing()
-  add_subdirectory(tests)
-  include(CodeCoverage)
-  append_coverage_compiler_flags()
-  set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -O0 --coverage")
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O0 --coverage")
+    message("Coverage is going to be generated")
+    enable_testing()
+    add_subdirectory(tests)
+    include(CodeCoverage)
+    append_coverage_compiler_flags()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 --coverage")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O0 --coverage")
   set(GCOVR_ADDITIONAL_ARGS "--exclude-unreachable-branches" "--exclude-throw-branches" )
 
   
-  setup_target_for_coverage_gcovr_sonar(NAME "${PROJECT_NAME}_coverage_sonar"
-                                      EXECUTABLE RunTests
-                                      DEPENDENCIES RunTests
-                                      BASE_DIRECTORY "${PROJECT_SOURCE_DIR}"
-                                      EXCLUDE "tests/*"
+    setup_target_for_coverage_gcovr_sonar(NAME "${PROJECT_NAME}_coverage_sonar"
+            EXECUTABLE RunTests
+            DEPENDENCIES RunTests
+            BASE_DIRECTORY "${PROJECT_SOURCE_DIR}"
+            EXCLUDE "tests/*"
   )    
   
-  setup_target_for_coverage_gcovr_html(NAME "${PROJECT_NAME}_coverage_html"
-                                       EXECUTABLE RunTests
-                                       DEPENDENCIES RunTests
-                                       BASE_DIRECTORY "${PROJECT_SOURCE_DIR}"
-                                       EXCLUDE "tests/*"
-  )
+    setup_target_for_coverage_gcovr_html(NAME "${PROJECT_NAME}_coverage_html"
+            EXECUTABLE RunTests
+            DEPENDENCIES RunTests
+            BASE_DIRECTORY "${PROJECT_SOURCE_DIR}"
+            EXCLUDE "tests/*"
+    )
 else()
   message("Build without Coverage") 
-
-  set(CMAKE_CXX_FLAGS "-std=c++11 -O3")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
 endif()
 
 # Generation version header file
 set_source_files_properties(version.h PROPERTIES GENERATED TRUE)
 add_custom_command(
-  OUTPUT version.h
-  DEPENDS ${CMAKE_SOURCE_DIR}/VERSION
-  COMMAND ${CMAKE_SOURCE_DIR}/mkversion ${CMAKE_SOURCE_DIR}
-  COMMENT "Generating version header"
-  VERBATIM
+        OUTPUT version.h
+        DEPENDS ${CMAKE_SOURCE_DIR}/VERSION
+        COMMAND ${CMAKE_SOURCE_DIR}/mkversion ${CMAKE_SOURCE_DIR}
+        COMMENT "Generating version header"
+        VERBATIM
 )
 include_directories(${CMAKE_BINARY_DIR})
 
@@ -91,8 +94,8 @@ link_directories(${FLEDGE_LIB_DIRS})
 # Create shared library
 
 if (FLEDGE_SRC)
-	message(STATUS "Using third-party includes " ${FLEDGE_SRC}/C/thirdparty)
-	include_directories(${FLEDGE_SRC}/C/thirdparty/rapidjson/include)
+    message(STATUS "Using third-party includes " ${FLEDGE_SRC}/C/thirdparty)
+    include_directories(${FLEDGE_SRC}/C/thirdparty/rapidjson/include)
 endif()
 
 
@@ -113,6 +116,6 @@ set_target_properties(${PROJECT_NAME} PROPERTIES SOVERSION 1)
 set(FLEDGE_INSTALL "" CACHE INTERNAL "")
 # Install library
 if (FLEDGE_INSTALL)
-	message(STATUS "Installing ${PROJECT_NAME} in ${FLEDGE_INSTALL}/plugins/${PLUGIN_TYPE}/${PROJECT_NAME}")
-	install(TARGETS ${PROJECT_NAME} DESTINATION ${FLEDGE_INSTALL}/plugins/${PLUGIN_TYPE}/${PROJECT_NAME})
+    message(STATUS "Installing ${PROJECT_NAME} in ${FLEDGE_INSTALL}/plugins/${PLUGIN_TYPE}/${PROJECT_NAME}")
+    install(TARGETS ${PROJECT_NAME} DESTINATION ${FLEDGE_INSTALL}/plugins/${PLUGIN_TYPE}/${PROJECT_NAME})
 endif()

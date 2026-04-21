@@ -391,13 +391,29 @@ IEC104ClientConfig::checkExchangeDataLayer(int typeId, int ca, int ioa)
 }
 
 bool
-IEC104ClientConfig::isValidIPAddress(const string& addrStr)
+IEC104ClientConfig::isValidHostName(const std::string& addrStr)
 {
-    // see https://stackoverflow.com/questions/318236/how-do-you-validate-that-a-string-is-a-valid-ipv4-address-in-c
     struct sockaddr_in sa;
     int result = inet_pton(AF_INET, addrStr.c_str(), &(sa.sin_addr));
+    if (result == 1) {
+        return true;
+    }
 
-    return (result == 1);
+    // Check if it's a valid IPv6 address
+    struct sockaddr_in6 sa6;
+    result = inet_pton(AF_INET6, addrStr.c_str(), &(sa6.sin6_addr));
+    if (result == 1) {
+        return true;
+    }
+
+    // If basic syntax validation passes, try to resolve the domain name
+    struct hostent* host_entry = gethostbyname(addrStr.c_str());
+    if (host_entry != nullptr) {
+        // Successfully resolved the domain name
+        return true;
+    }
+
+    return false; // Invalid hostname or IP address
 }
 
 void IEC104ClientConfig::importProtocolConfig(const string& protocolConfig)
@@ -852,7 +868,7 @@ void IEC104ClientConfig::importRedGroupCon(const Value& con, std::shared_ptr<IEC
     }
     string srvIp = con["srv_ip"].GetString();
 
-    if (!isValidIPAddress(srvIp)) {
+    if (!isValidHostName(srvIp)) {
         Iec104Utility::log_error("%s  srv_ip %s is not a valid IP address -> ignore", beforeLog.c_str(), srvIp.c_str());
         return;
     }
@@ -869,7 +885,7 @@ void IEC104ClientConfig::importRedGroupCon(const Value& con, std::shared_ptr<IEC
         if (con["clt_ip"].IsString()) {
             string cltIpStr = con["clt_ip"].GetString();
 
-            if (isValidIPAddress(cltIpStr)) {
+            if (isValidHostName(cltIpStr)) {
                 clientIp = cltIpStr;
             }
             else {
@@ -1106,12 +1122,20 @@ void IEC104ClientConfig::importExchangeConfig(const string& exchangeConfig)
         string label = datapoint[JSON_LABEL].GetString();
 
 
-        bool isGiTriggeringTs = false;
+        int trigger_value = -1;
         if (datapoint.HasMember(JSON_PIVOT_SUBTYPES) && datapoint[JSON_PIVOT_SUBTYPES].IsArray()) {
             for (const Value &subtype : datapoint[JSON_PIVOT_SUBTYPES].GetArray()) {
-                if (subtype.IsString() && subtype.GetString() == string(JSON_TRIGGER_SOUTH_GI_PIVOT_SUBTYPE)) {
-                    isGiTriggeringTs = true;
-                    break;
+                if (subtype.IsObject() && subtype.HasMember(JSON_TRIGGER_SOUTH_GI_PIVOT_SUBTYPE)) {
+                    if (subtype[JSON_TRIGGER_SOUTH_GI_PIVOT_SUBTYPE].IsUint()){
+                        trigger_value = subtype[JSON_TRIGGER_SOUTH_GI_PIVOT_SUBTYPE].GetInt();
+                        if (trigger_value != 0 && trigger_value != 1) {
+                            Iec104Utility::log_error("%s %s is not a valid value (need to be 0 or 1)", beforeLog.c_str(), JSON_TRIGGER_SOUTH_GI_PIVOT_SUBTYPE); //LCOV_EXCL_LINE
+                        }
+                    }
+                    else {
+                        Iec104Utility::log_error("%s %s is not an int", beforeLog.c_str(), JSON_TRIGGER_SOUTH_GI_PIVOT_SUBTYPE);
+                    }
+                    break; //LCOV_EXCL_LINE
                 }
             }
         }
@@ -1199,18 +1223,18 @@ void IEC104ClientConfig::importExchangeConfig(const string& exchangeConfig)
                         def->typeId = IEC104ClientConfig::getTypeIdFromString(typeIdStr);
                         def->giGroups = giGroups;
 
-                        Iec104Utility::log_debug("%s  Added exchange data %i:%i type: %i (%s)", beforeLog.c_str(), ca, ioa, def->typeId,
-                                                typeIdStr.c_str());
+                        Iec104Utility::log_debug("%s  Added exchange data %i:%i type: %i (%s)", beforeLog.c_str(), ca, ioa, def->typeId, //LCOV_EXCL_LINE
+                                                typeIdStr.c_str()); //LCOV_EXCL_LINE
                         ExchangeDefinition()[ca][ioa] = def;
 
-                        if (isGiTriggeringTs) {
-                            Iec104Utility::log_debug("Adding TS %s with ca %d ioa %d to GI triggering one", def->label, def->ca, def->ioa);
-                            m_cgTriggeringTsAdresses.insert(make_pair(ca, ioa));
+                        if (trigger_value == 0 || trigger_value == 1) {
+                            Iec104Utility::log_debug("Adding TS %s with ca %d ioa %d to GI triggering one", def->label, def->ca, def->ioa); //LCOV_EXCL_LINE
+                            m_cgTriggeringTsAdresses.insert({make_pair(ca, ioa), trigger_value});
                         }
                     }
                 } else {
-                    Iec104Utility::log_error("%s  %s value does not follow format 'XXX-YYY': %s", beforeLog.c_str(), JSON_PROT_ADDR,
-                                            address.c_str());
+                    Iec104Utility::log_error("%s  %s value does not follow format 'XXX-YYY': %s", beforeLog.c_str(), JSON_PROT_ADDR, //LCOV_EXCL_LINE
+                                            address.c_str()); //LCOV_EXCL_LINE
                     return;
                 }
             }
