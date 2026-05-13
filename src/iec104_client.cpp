@@ -77,6 +77,8 @@ Datapoint* IEC104Client::m_createQualityUpdateForDataObject(std::shared_ptr<Data
 
     attributes->push_back(m_createDatapoint("do_ioa", (long)dataDefinition->ioa));
 
+    attributes->push_back(m_createDatapoint("do_label", dataDefinition->label));
+
     if (qd) {
         attributes->push_back(m_createDatapoint("do_quality_iv", (*qd & IEC60870_QUALITY_INVALID) ? 1L : 0L));
 
@@ -311,6 +313,8 @@ Datapoint* IEC104Client::m_createDataObject(CS101_ASDU asdu, int64_t ioa, const 
     attributes->push_back(m_createDatapoint("do_negative", (long)CS101_ASDU_isNegative(asdu)));
 
     attributes->push_back(m_createDatapoint("do_ioa", (long)ioa));
+
+    attributes->push_back(m_createDatapoint("do_label", dataname));
 
     attributes->push_back(m_createDatapoint("do_value", value));
 
