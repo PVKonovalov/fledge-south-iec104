@@ -77,6 +77,8 @@ Datapoint* IEC104Client::m_createQualityUpdateForDataObject(std::shared_ptr<Data
 
     attributes->push_back(m_createDatapoint("do_ioa", (long)dataDefinition->ioa));
 
+    attributes->push_back(m_createDatapoint("do_label", dataDefinition->label));
+
     if (qd) {
         attributes->push_back(m_createDatapoint("do_quality_iv", (*qd & IEC60870_QUALITY_INVALID) ? 1L : 0L));
 
@@ -312,6 +314,8 @@ Datapoint* IEC104Client::m_createDataObject(CS101_ASDU asdu, int64_t ioa, const 
 
     attributes->push_back(m_createDatapoint("do_ioa", (long)ioa));
 
+    attributes->push_back(m_createDatapoint("do_label", dataname));
+
     attributes->push_back(m_createDatapoint("do_value", value));
 
     if (qd) {
@@ -345,15 +349,27 @@ void
 IEC104Client::sendData(vector<Datapoint*> datapoints,
                             const vector<std::string> labels)
 {
-    int i = 0;
+    std::map<std::string, std::vector<Datapoint*>> assetGroups;
+    std::vector<std::string> assetOrder;
 
-    for (Datapoint* item_dp : datapoints)
-    {
-        std::vector<Datapoint*> points;
-        points.push_back(item_dp);
+    for (size_t i = 0; i < datapoints.size(); i++) {
+        const std::string& label = labels[i];
+        size_t dashPos = label.find('-');
+        std::string assetName = (dashPos != std::string::npos) ? label.substr(0, dashPos) : label;
+        std::string paramName = (dashPos != std::string::npos) ? label.substr(dashPos + 1) : label;
 
-        m_iec104->ingest(labels.at(i), points);
-        i++;
+        if (assetGroups.find(assetName) == assetGroups.end()) {
+            assetOrder.push_back(assetName);
+        }
+
+        Datapoint* paramDp = new Datapoint(paramName, datapoints[i]->getData());
+        delete datapoints[i];
+
+        assetGroups[assetName].push_back(paramDp);
+    }
+
+    for (const std::string& assetName : assetOrder) {
+        m_iec104->ingest(assetName, assetGroups[assetName]);
     }
 }
 
