@@ -151,7 +151,25 @@ static const char *default_config = QUOTE({
                 ]
             }      
         })
-    }
+    },
+    "manufacturer": {
+        "description": "Manufacturer of the device",
+        "type": "string",
+        "default": "OrxaGrid",
+        'readonly': 'true'
+        },
+    "device_name": { 
+        "description": "Name of device",
+        "type": "string",
+        "default": "",
+        'readonly': 'true'
+        },
+    "protocol": { 
+        "description": "Name of protocol",
+        "type": "string",
+        "default": "iec_104",
+        'readonly': 'true'
+        }
 });
 
 
