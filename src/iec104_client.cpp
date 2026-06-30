@@ -448,13 +448,10 @@ IEC104Client::sendSouthMonitoringEvent(bool connxStatus, bool giStatus)
     Datapoint* southEvent = new Datapoint("south_event", dpv);
 
     vector<Datapoint*> datapoints;
-    vector<string> labels;
 
     datapoints.push_back(southEvent);
 
-    labels.push_back(m_config->GetConnxStatusSignal());
-
-    sendData(datapoints, labels);
+    m_iec104->ingest(m_config->GetConnxStatusSignal(), datapoints);
 }
 
 void
